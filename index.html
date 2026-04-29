@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz — Cuidados com o RN e Reanimação Neonatal</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a1a1a; min-height: 100vh; }
+  header { background: #1e3a5f; color: white; padding: 20px 30px; text-align: center; }
+  header h1 { font-size: 22px; margin-bottom: 4px; }
+  header p { font-size: 13px; opacity: 0.8; }
+  .quiz-container { max-width: 800px; margin: 30px auto; padding: 0 16px 60px; }
+  #startScreen { background: white; border-radius: 12px; padding: 40px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  #startScreen h2 { font-size: 20px; color: #1e3a5f; margin-bottom: 12px; }
+  #startScreen p { font-size: 14px; color: #555; margin-bottom: 24px; line-height: 1.6; }
+  .progress-bar-bg { background: #dde3ea; border-radius: 8px; height: 8px; margin-bottom: 8px; }
+  .progress-bar-fill { background: #2563eb; height: 8px; border-radius: 8px; transition: width 0.4s ease; }
+  .progress-label { font-size: 12px; color: #666; margin-bottom: 20px; }
+  .question-card { background: white; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 16px; }
+  .question-number { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #2563eb; letter-spacing: 1px; margin-bottom: 10px; }
+  .question-text { font-size: 15px; line-height: 1.65; color: #1a1a1a; margin-bottom: 22px; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option-btn { background: #f7f9fc; border: 2px solid #dde3ea; border-radius: 8px; padding: 12px 16px; text-align: left; font-size: 14px; cursor: pointer; transition: background 0.15s, border-color 0.15s; line-height: 1.5; }
+  .option-btn:hover:not(:disabled) { background: #e8f0fe; border-color: #2563eb; }
+  .option-btn.correct { background: #d1fae5; border-color: #16a34a; color: #166534; }
+  .option-btn.wrong { background: #fee2e2; border-color: #dc2626; color: #991b1b; }
+  .option-btn:disabled { cursor: default; }
+  .explanation { display: none; background: #f0fdf4; border-left: 4px solid #16a34a; border-radius: 0 8px 8px 0; padding: 14px 16px; margin-top: 14px; font-size: 13px; line-height: 1.6; color: #166534; }
+  .explanation.show { display: block; }
+  .btn-next { display: none; margin-top: 18px; background: #2563eb; color: white; border: none; border-radius: 8px; padding: 12px 28px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+  .btn-next:hover { background: #1d4ed8; }
+  .btn-next.show { display: inline-block; }
+  .btn-primary { background: #2563eb; color: white; border: none; border-radius: 8px; padding: 14px 36px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+  .btn-primary:hover { background: #1d4ed8; }
+  #resultScreen { display: none; background: white; border-radius: 12px; padding: 40px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  .score-circle { width: 120px; height: 120px; border-radius: 50%; background: #1e3a5f; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 20px; }
+  .score-circle .score-num { font-size: 32px; font-weight: 700; }
+  .score-circle .score-denom { font-size: 13px; opacity: 0.8; }
+  #resultScreen h2 { font-size: 20px; color: #1e3a5f; margin-bottom: 10px; }
+  #resultScreen p { font-size: 14px; color: #555; margin-bottom: 24px; }
+  .stats-row { display: flex; justify-content: center; gap: 24px; margin-bottom: 28px; flex-wrap: wrap; }
+  .stat-box { background: #f7f9fc; border-radius: 8px; padding: 12px 20px; text-align: center; min-width: 90px; }
+  .stat-box .stat-val { font-size: 22px; font-weight: 700; }
+  .stat-box .stat-lbl { font-size: 11px; color: #888; margin-top: 2px; }
+  .stat-box.green .stat-val { color: #16a34a; }
+  .stat-box.red .stat-val { color: #dc2626; }
+  .stat-box.blue .stat-val { color: #2563eb; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Cuidados com o RN e Reanimação Neonatal</h1>
+  <p>Pediatria — Neonatologia</p>
+</header>
+<div class="quiz-container">
+  <div id="startScreen">
+    <h2>Quiz de Revisão</h2>
+    <p>18 questões cobrindo APGAR, reanimação neonatal (VPP, massagem, adrenalina), SDR, SAM, TTRN e cuidados imediatos ao recém-nascido.<br><br>Responda cada questão e veja a explicação antes de avançar.</p>
+    <button class="btn-primary" onclick="startQuiz()">Começar Quiz</button>
+  </div>
+  <div id="quizArea" style="display:none;">
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar" style="width:0%"></div></div>
+    <div class="progress-label" id="progressLabel">Questão 0 de 18</div>
+    <div class="question-card" id="questionCard">
+      <div class="question-number" id="questionNumber"></div>
+      <div class="question-text" id="questionText"></div>
+      <div class="options" id="optionsContainer"></div>
+      <div class="explanation" id="explanation"></div>
+      <button class="btn-next" id="btnNext" onclick="nextQuestion()">Próxima questão →</button>
+    </div>
+  </div>
+  <div id="resultScreen">
+    <div class="score-circle">
+      <span class="score-num" id="scoreFinal">0</span>
+      <span class="score-denom" id="scoreDenom">de 18</span>
+    </div>
+    <h2 id="resultTitle"></h2>
+    <p id="resultMsg"></p>
+    <div class="stats-row">
+      <div class="stat-box green"><div class="stat-val" id="statCorrect">0</div><div class="stat-lbl">Acertos</div></div>
+      <div class="stat-box red"><div class="stat-val" id="statWrong">0</div><div class="stat-lbl">Erros</div></div>
+      <div class="stat-box blue"><div class="stat-val" id="statPct">0%</div><div class="stat-lbl">Aproveitamento</div></div>
+    </div>
+    <button class="btn-primary" onclick="restartQuiz()">Refazer Quiz</button>
+  </div>
+</div>
+<script>
+const rawQuestions = [
+  {
+    question: "Quais são os passos iniciais da reanimação neonatal a serem realizados nos primeiros 30 segundos de vida?",
+    options: [
+      "Prover calor, secar, posicionar (pescoço levemente estendido) e aspirar vias aéreas se necessário",
+      "Intubar imediatamente, ventilar e comprimir o tórax",
+      "Administrar adrenalina, posicionar e aspirar vigorosamente",
+      "Prover calor, manter úmido, ventilar com VPP e comprimir",
+      "Apenas secar e aguardar 60 segundos antes de qualquer intervenção"
+    ],
+    correctIndex: 0,
+    explanation: "Passos iniciais (primeiros 30 segundos — 'minuto de ouro'): (1) Prover calor (mesa aquecida); (2) Secar e estimular; (3) Posicionar (pescoço levemente estendido — posição de 'farejador'); (4) Aspirar vias aéreas se houver secreção. Avaliar: respiração + FC. Se respiração irregular ou FC <100 bpm → VPP."
+  },
+  {
+    question: "Qual a frequência e a cadência da ventilação com pressão positiva (VPP) na reanimação neonatal?",
+    options: [
+      "40–60 ventilações por minuto com cadência 'aperta–solta–solta' (1 segundo por ciclo)",
+      "20–30 ventilações por minuto com cadência 'aperta–solta–solta–solta'",
+      "60–80 ventilações por minuto com cadência 'aperta–aperta–solta'",
+      "40–60 ventilações por minuto com cadência 'aperta–aperta–solta'",
+      "30 ventilações por minuto sincronizadas com compressões torácicas"
+    ],
+    correctIndex: 0,
+    explanation: "VPP neonatal: 40–60 ventilações/min com cadência 'aperta–solta–solta' (aperta = inspiração ~0,3s; solta-solta = expiração ~0,7s). Avaliar expansão torácica adequada. Reavaliação após 30s: se FC ≥100 bpm e respiração presente → desmame. Se FC <60 bpm após VPP efetiva por 30s → iniciar massagem cardíaca."
+  },
+  {
+    question: "Qual o escore de APGAR e o que ele avalia?",
+    options: [
+      "Escore de 0–10 avaliado ao 1º e 5º minuto de vida, pontuando: frequência cardíaca, esforço respiratório, tônus muscular, irritabilidade reflexa e cor da pele",
+      "Escore de 0–5 avaliado ao 1º minuto avaliando apenas FC e coloração",
+      "Escore de 0–10 avaliado somente ao 5º minuto, com 4 critérios",
+      "Escore de 0–10 que inclui a glicemia e temperatura como parâmetros",
+      "Escore de 0–8 avaliado ao 1º minuto de vida com 4 critérios"
+    ],
+    correctIndex: 0,
+    explanation: "APGAR (Appearance, Pulse, Grimace, Activity, Respiration): avaliado ao 1º e 5º minutos. Cada critério: 0, 1 ou 2 pontos. 7–10 = normal; 4–6 = depressão moderada; 0–3 = depressão grave. NÃO deve guiar a reanimação (decisão é em tempo real), mas é indicador de vitalidade pós-nascimento."
+  },
+  {
+    question: "Quando está indicada a massagem cardíaca na reanimação neonatal?",
+    options: [
+      "FC <60 bpm após 30 segundos de VPP efetiva (com expansão torácica adequada)",
+      "FC <100 bpm imediatamente ao nascimento, antes da VPP",
+      "FC <60 bpm nos primeiros 30 segundos, antes da VPP",
+      "FC <80 bpm após qualquer tentativa de ventilação",
+      "Ausência de pulso no cordão umbilical ao nascimento"
+    ],
+    correctIndex: 0,
+    explanation: "Massagem cardíaca: indicada quando FC <60 bpm APÓS 30 segundos de VPP efetiva (com boa expansão torácica). Técnica: 2 polegares sobre 1/3 inferior do esterno (técnica dos 2 polegares envolve o tórax) ou 2 dedos. Proporção 3:1 (3 compressões : 1 ventilação) = 120 eventos/min (90 compressões + 30 ventilações). Preferir cânula traqueal durante massagem."
+  },
+  {
+    question: "Qual a proporção de compressão:ventilação na massagem cardíaca neonatal e quantos eventos por minuto?",
+    options: [
+      "3:1 — totalizando 120 eventos por minuto (90 compressões + 30 ventilações)",
+      "15:2 — igual à reanimação pediátrica com 2 socorristas",
+      "30:2 — igual à reanimação de adultos",
+      "5:1 — com pausa para ventilação a cada 5 compressões",
+      "2:1 — priorizando as ventilações sobre as compressões"
+    ],
+    correctIndex: 0,
+    explanation: "Reanimação neonatal: proporção 3:1 (3 compressões : 1 ventilação), totalizando 120 eventos/min (90 compressões + 30 ventilações/min). Diferente da reanimação pediátrica/adulto (15:2 ou 30:2) porque a causa principal de PCR neonatal é hipóxia — as ventilações são tão importantes quanto as compressões."
+  },
+  {
+    question: "Qual a dose e via de administração de adrenalina na reanimação neonatal?",
+    options: [
+      "0,01–0,03 mg/kg da solução 1:10.000 endovenoso (via umbilical) — repetir a cada 3–5 minutos se necessário",
+      "1 mg/kg da solução 1:1.000 intramuscular",
+      "0,1 mg/kg da solução 1:1.000 endotraquealmente como primeira escolha",
+      "0,5 mg/kg da solução 1:10.000 subcutâneo",
+      "1 mg IV independentemente do peso, como nos adultos"
+    ],
+    correctIndex: 0,
+    explanation: "Adrenalina neonatal: 0,01–0,03 mg/kg da solução 1:10.000 (volume: 0,1–0,3 mL/kg), via intravenosa umbilical ou endotraqueal (dose maior ET: 0,05–0,1 mg/kg). Indicada quando FC <60 bpm após massagem + VPP por 30–60s. Repetir a cada 3–5 min se necessário."
+  },
+  {
+    question: "O que é o 'minuto de ouro' na reanimação neonatal?",
+    options: [
+      "O primeiro minuto de vida, durante o qual os passos iniciais e a avaliação devem ser concluídos, e a VPP iniciada se necessário",
+      "O intervalo entre o 1º e o 5º minuto de vida para calcular o APGAR",
+      "O tempo máximo para intubar o RN antes de iniciar massagem cardíaca",
+      "O período de 60 segundos antes de clampar o cordão umbilical",
+      "O tempo total disponível para reanimação antes de dano neurológico irreversível"
+    ],
+    correctIndex: 0,
+    explanation: "'Minuto de ouro': o primeiro minuto de vida. Todos os passos iniciais devem ser completados e a VPP iniciada (se necessário) dentro desse minuto. Atraso no início da ventilação aumenta o risco de encefalopatia hipóxico-isquêmica. A clampeagem tardia do cordão (30–60s) é compatível com o minuto de ouro se o RN for vigoroso."
+  },
+  {
+    question: "O RN de 29 semanas apresenta desconforto respiratório progressivo ao nascimento com gemência, batimento de asa de nariz e tiragem intercostal. O Rx mostra opacidade em 'vidro fosco' com broncograma aéreo. Qual o diagnóstico e o tratamento?",
+    options: [
+      "Síndrome do desconforto respiratório (SDR) por deficiência de surfactante — tratamento: surfactante exógeno endotraqueal + suporte ventilatório",
+      "Taquipneia transitória do RN (TTRN) — tratamento: O₂ suplementar, autolimitada",
+      "Síndrome de aspiração de mecônio (SAM) — tratamento: lavagem brônquica com surfactante",
+      "Pneumonia neonatal por GBS — tratamento: ampicilina + gentamicina EV",
+      "Pneumotórax espontâneo — tratamento: drenagem torácica de urgência"
+    ],
+    correctIndex: 0,
+    explanation: "SDR (doença da membrana hialina): prematuros por imaturidade pulmonar → deficiência de surfactante → colapso alveolar → opacidade em 'vidro fosco' com broncograma aéreo ao Rx. Tratamento: surfactante exógeno exotraqueal (beractante, poractante) + suporte ventilatório (CPAP nasal ou VM). Corticoide antenatal (betametasona) previne/atenua."
+  },
+  {
+    question: "Qual a característica do Rx de tórax na síndrome de aspiração de mecônio (SAM)?",
+    options: [
+      "Hiperinsuflação pulmonar bilateral com áreas de atelectasia e infiltrado nodular irregular ('em flocos de neve')",
+      "Opacidade difusa bilateral homogênea em 'vidro fosco' com broncograma aéreo",
+      "Infiltrado intersticial peri-hilar bilateral com estrias peri-hilares e pequeno derrame pleural",
+      "Hipotransparência unilateral com desvio do mediastino contralateral",
+      "Rx de tórax normal na maioria dos casos de SAM"
+    ],
+    correctIndex: 0,
+    explanation: "SAM: mecônio aspirado obstrui as vias aéreas → atelectasias + hiperinsuflação por mecanismo valvar. Rx: hiperinsuflação bilateral + infiltrado nodular irregular ('em flocos de neve'/cotonoso). Mais frequente em RN pós-termo (>42 semanas). Complicações: pneumotórax, hipertensão pulmonar persistente."
+  },
+  {
+    question: "Qual a principal diferença entre a TTRN (taquipneia transitória do RN) e a SDR?",
+    options: [
+      "TTRN: RN a termo ou pós-termo, cesárea eletiva, autolimitada (48–72h), estrias peri-hilares no Rx; SDR: prematuro, deficiência de surfactante, vidro fosco, progressiva sem tratamento",
+      "TTRN: exclusiva de prematuros; SDR: exclusiva de RN a termo por aspiração",
+      "TTRN: causa pneumotórax frequente; SDR: raramente complica com pneumotórax",
+      "TTRN: tratada com surfactante; SDR: tratada apenas com O₂ suplementar",
+      "Não há diferença clínica; ambas são tratadas da mesma forma"
+    ],
+    correctIndex: 0,
+    explanation: "TTRN ('pulmão molhado'): RN a termo/pós-termo, especialmente após cesárea eletiva sem trabalho de parto (falta a compressão do tórax que expulsa o líquido alveolar). Rx: estrias peri-hilares simétricas, pequeno derrame pleural. Autolimitada em 48–72h. SDR: prematuro, deficiência de surfactante, vidro fosco, requer surfactante."
+  },
+  {
+    question: "Por que a cesárea eletiva sem trabalho de parto predispõe à TTRN?",
+    options: [
+      "O trabalho de parto e a passagem pelo canal de parto comprimem o tórax, expulsando o líquido pulmonar fetal; sem esse mecanismo, o líquido é retido e atrasa a adaptação respiratória pós-natal",
+      "A anestesia raquidiana da cesárea deprime o centro respiratório fetal diretamente",
+      "Sem trabalho de parto, não há liberação de surfactante pelos pneumócitos tipo II",
+      "A cesárea eletiva impede a maturação adrenal, reduzindo o cortisol e atrasando a reabsorção de líquido pulmonar",
+      "A cesárea eletiva causa maior risco de infecção pulmonar bacteriana imediata"
+    ],
+    correctIndex: 0,
+    explanation: "Durante o trabalho de parto e parto vaginal, a compressão do tórax pelo canal do parto expulsa o líquido alveolar fetal. Na cesárea eletiva (sem trabalho de parto), essa compressão não ocorre → retenção de líquido nos alvéolos → TTRN. A reabsorção espontânea ocorre em 48–72h pelos capilares e linfáticos pulmonares."
+  },
+  {
+    question: "Quais são os critérios para clampeagem tardia do cordão umbilical e quais os benefícios?",
+    options: [
+      "Aguardar 30–60 segundos (RN a termo) ou 30s–180s (prematuro) se o RN estiver vigoroso — benefícios: maior reserva de ferro, menor anemia e menor necessidade de transfusão em prematuros",
+      "Aguardar 5 minutos em todos os RN independentemente do estado clínico",
+      "Clampar imediatamente em todos os casos para prevenir policitemia",
+      "Apenas em RN pós-termo que não aspiraram mecônio",
+      "Somente indicada em RN de mães com anemia grave"
+    ],
+    correctIndex: 0,
+    explanation: "Clampeagem tardia: aguardar 30–60s (a termo) ou até 30–180s (prematuro) se o RN estiver vigoroso e não necessitar de reanimação imediata. Benefícios: transfusão placentária de 25–35 mL de sangue → maior reserva de ferro, menor incidência de anemia, menor necessidade de transfusão e menor incidência de hemorragia intraventricular em prematuros."
+  },
+  {
+    question: "Um RN de 28 semanas necessita de reanimação. Qual a concentração inicial de O₂ recomendada para a VPP?",
+    options: [
+      "30% de O₂ (ar suplementado) — prematuros <35 semanas iniciam com 30%; RN a termo iniciam com 21% (ar ambiente)",
+      "100% de O₂ para todos os RN que necessitam de VPP",
+      "21% (ar ambiente) para todos, independentemente da idade gestacional",
+      "50% de O₂ para prematuros e 100% para RN a termo",
+      "0% (ar ambiente puro) em prematuros por risco de toxicidade pelo O₂"
+    ],
+    correctIndex: 0,
+    explanation: "VPP neonatal: RN a termo → iniciar com 21% (ar ambiente). Prematuros <35 semanas → iniciar com 30% de O₂. Titular conforme SpO₂ (alvo: 60–65% no 1º min, 85–95% no 5º min). Hiperoxia em prematuros causa dano oxidativo → iniciar com concentração menor e aumentar conforme necessidade."
+  },
+  {
+    question: "Qual a principal causa de síndrome de aspiração de mecônio (SAM)?",
+    options: [
+      "Líquido amniótico meconial aspirado por feto pós-termo ou com sofrimento fetal agudo",
+      "Aspiração de conteúdo gástrico durante o parto cesáreo",
+      "Infecção bacteriana intrauterina por E. coli produtora de mecônio",
+      "Deficiência de surfactante em RN a termo com insuficiência placentária",
+      "Aspiração de sangue materno durante parto vaginal prolongado"
+    ],
+    correctIndex: 0,
+    explanation: "SAM: líquido amniótico meconial (LAM) aspirado intra ou extrauterinamente. Mais frequente em RN pós-termo (>42 semanas — intestino mais maduro, peristalse aumentada) ou com sofrimento fetal agudo (hipóxia → gasping → aspiração). A presença de LAM espesso e o gasping fetal são os principais fatores de risco."
+  },
+  {
+    question: "O que avaliar ao nascimento para decidir se o RN precisa de reanimação?",
+    options: [
+      "Três perguntas: (1) É a termo? (2) Está respirando ou chorando? (3) Tem tônus muscular adequado? — se sim a tudo: cuidados de rotina junto à mãe",
+      "Apenas a frequência cardíaca ao nascimento; se <100 bpm iniciar VPP",
+      "APGAR de 1 minuto; se <7 iniciar reanimação completa",
+      "Coloração da pele; se cianótico iniciar O₂ 100% imediatamente",
+      "Temperatura retal; se <36°C iniciar suporte ventilatório"
+    ],
+    correctIndex: 0,
+    explanation: "Avaliação inicial (segundos após o nascimento): (1) RN a termo? (2) Respirando/chorando? (3) Tônus adequado? Se SIM para todos → cuidados de rotina junto à mãe (contato pele a pele, clampeagem tardia, amamentação precoce). Se NÃO a qualquer → levar à mesa de reanimação e realizar passos iniciais."
+  },
+  {
+    question: "Qual a definição de APGAR 0–3 (depressão grave) e qual a conduta?",
+    options: [
+      "RN sem ou com poucos sinais vitais — indica reanimação completa imediata (VPP, massagem cardíaca e possivelmente adrenalina)",
+      "RN com FC 60–100 bpm — indica VPP apenas sem massagem",
+      "RN com coloração cianótica mas com choro vigoroso — indicar O₂ inalatório",
+      "RN prematuro extremo que necessita de suporte respiratório eletivo",
+      "APGAR 0–3 não indica qualquer conduta específica além de observação"
+    ],
+    correctIndex: 0,
+    explanation: "APGAR 0–3 (depressão grave): RN com poucos ou nenhum sinal vital (FC ausente ou muito baixa, sem respiração, flácido, pálido/cianótico). Indica reanimação completa: VPP efetiva → se FC <60 bpm → massagem 3:1 → se não melhora → adrenalina. APGAR não guia a reanimação em tempo real, mas confirma sua necessidade."
+  },
+  {
+    question: "Qual a diferença entre SDR e pneumonia neonatal no Rx de tórax?",
+    options: [
+      "SDR: opacidade difusa bilateral homogênea em 'vidro fosco' com broncograma aéreo; Pneumonia: infiltrado assimétrico ou unilateral, irregular, podendo ter consolidações e derrame pleural",
+      "SDR: unilateral e assimétrica; Pneumonia neonatal: bilateral e homogênea",
+      "Ambas têm Rx idêntico; o diagnóstico diferencial é apenas clínico-laboratorial",
+      "SDR: hipertransparência pulmonar; Pneumonia: opacidade total unilateral",
+      "SDR: estrias peri-hilares; Pneumonia: vidro fosco bilateral simétrico"
+    ],
+    correctIndex: 0,
+    explanation: "SDR: opacidade granular difusa bilateral ('vidro fosco'), simétrica, com broncograma aéreo — clássico de prematuro. Pneumonia neonatal: infiltrado irregular, pode ser unilateral ou assimétrico, com consolidações e eventualmente derrame pleural. Pneumonia por GBS pode mimetizar SDR (tratar ambas enquanto aguarda culturas)."
+  },
+  {
+    question: "Por que o RN prematuro tem maior risco de síndrome do desconforto respiratório?",
+    options: [
+      "A produção de surfactante pelos pneumócitos tipo II é deficiente antes de 34–36 semanas; sem surfactante, os alvéolos colapsam ao final de cada expiração (atelectasia progressiva)",
+      "O diafragma é imaturo em prematuros, causando respiração paradoxal",
+      "A caixa torácica cartilaginosa do prematuro tem baixa complacência e colapsa com cada inspiração",
+      "O centro respiratório bulbar é imaturo, causando apneia central e não SDR",
+      "Os capilares pulmonares são imaturos e causam edema pulmonar hidrrostático"
+    ],
+    correctIndex: 0,
+    explanation: "Surfactante (produzido pelos pneumócitos tipo II) reduz a tensão superficial alveolar e mantém os alvéolos abertos ao final da expiração. Antes de 34–36 semanas, a produção é insuficiente → colapso alveolar ao expirar → atelectasia progressiva → hipóxia → SDR. Corticoide antenatal (betametasona) estimula a maturação pulmonar e a produção de surfactante."
+  }
+];
+
+function shuffleQuestion(q) {
+  const correctText = q.options[q.correctIndex];
+  const shuffled = [...q.options];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return { ...q, options: shuffled, correctIndex: shuffled.indexOf(correctText) };
+}
+function prepareQuestions() {
+  const shuffledQs = [...rawQuestions];
+  for (let i = shuffledQs.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledQs[i], shuffledQs[j]] = [shuffledQs[j], shuffledQs[i]];
+  }
+  return shuffledQs.map(shuffleQuestion);
+}
+let questions = [], currentIndex = 0, score = 0, answered = 0;
+function startQuiz() {
+  questions = prepareQuestions(); currentIndex = 0; score = 0; answered = 0;
+  document.getElementById('startScreen').style.display = 'none';
+  document.getElementById('resultScreen').style.display = 'none';
+  document.getElementById('quizArea').style.display = 'block';
+  renderQuestion();
+}
+function renderQuestion() {
+  const q = questions[currentIndex]; const total = questions.length;
+  document.getElementById('progressBar').style.width = ((currentIndex / total) * 100) + '%';
+  document.getElementById('progressLabel').textContent = `Questão ${currentIndex + 1} de ${total}`;
+  document.getElementById('questionNumber').textContent = `Questão ${currentIndex + 1}`;
+  document.getElementById('questionText').textContent = q.question;
+  const container = document.getElementById('optionsContainer'); container.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button'); btn.className = 'option-btn'; btn.textContent = opt;
+    btn.onclick = () => selectAnswer(i); container.appendChild(btn);
+  });
+  document.getElementById('explanation').classList.remove('show');
+  document.getElementById('explanation').textContent = '';
+  document.getElementById('btnNext').classList.remove('show');
+}
+function selectAnswer(selectedIndex) {
+  const q = questions[currentIndex]; const buttons = document.querySelectorAll('.option-btn');
+  buttons.forEach(btn => btn.disabled = true);
+  if (selectedIndex === q.correctIndex) { buttons[selectedIndex].classList.add('correct'); score++; }
+  else { buttons[selectedIndex].classList.add('wrong'); buttons[q.correctIndex].classList.add('correct'); }
+  answered++;
+  const exp = document.getElementById('explanation'); exp.textContent = q.explanation; exp.classList.add('show');
+  const btnNext = document.getElementById('btnNext');
+  btnNext.textContent = currentIndex < questions.length - 1 ? 'Próxima questão →' : 'Ver resultado';
+  btnNext.classList.add('show');
+}
+function nextQuestion() {
+  currentIndex++;
+  if (currentIndex < questions.length) { renderQuestion(); } else { showResult(); }
+}
+function showResult() {
+  document.getElementById('quizArea').style.display = 'none';
+  document.getElementById('resultScreen').style.display = 'block';
+  const total = questions.length; const pct = Math.round((score / total) * 100);
+  document.getElementById('scoreFinal').textContent = score;
+  document.getElementById('scoreDenom').textContent = `de ${total}`;
+  document.getElementById('statCorrect').textContent = score;
+  document.getElementById('statWrong').textContent = total - score;
+  document.getElementById('statPct').textContent = pct + '%';
+  let title, msg;
+  if (pct >= 90) { title = 'Excelente!'; msg = 'Domínio completo do conteúdo. Você está preparado para a prova.'; }
+  else if (pct >= 70) { title = 'Muito bom!'; msg = 'Bom domínio geral. Revise os pontos onde errou antes da prova.'; }
+  else if (pct >= 50) { title = 'Razoável'; msg = 'Ainda há pontos a consolidar. Releia o relatório e refaça o quiz.'; }
+  else { title = 'Precisa revisar'; msg = 'Recomendo reler o relatório completo antes de tentar novamente.'; }
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultMsg').textContent = msg;
+}
+function restartQuiz() { startQuiz(); }
+</script>
+</body>
+</html>
